@@ -1,0 +1,60 @@
+buildscript {
+	ext {
+		springBootVersion = '1.5.2.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+
+jar {
+	baseName = 'demo'
+	version = '0.0.1-SNAPSHOT'
+}
+
+sourceCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+	maven {
+ 		   url "https://artifacts.elastic.co/maven"
+ 			 }
+}
+
+
+dependencies {
+	compile('org.springframework.boot:spring-boot-starter')
+	{
+		  exclude module: "spring-boot-starter-logging"
+	}
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+	
+	
+	compile("org.springframework.boot:spring-boot-starter-web") {
+      
+        exclude module: "spring-boot-starter-logging"
+         exclude module: "logback-classic"
+    }
+  
+
+	//compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.7'
+	compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.7'
+	
+	
+	
+    compile group: 'org.elasticsearch', name: 'elasticsearch', version: '5.4.0'
+	
+	compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.8.5'
+	
+	compile "org.elasticsearch.client:x-pack-transport:5.4.0"
+
+
+
+}
