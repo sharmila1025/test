@@ -3,57 +3,80 @@ package com.sharmila.musiclibrary.utils;
 
 import javax.annotation.PostConstruct;
 
+import org.elasticsearch.client.Client;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
+
+
+import org.elasticsearch.client.Client;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.inject.Inject;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
+
+
+import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Component;
 import com.sharmila.musiclibrary.utils.ConfigUtils;
 
 @Component
-@PropertySource("classpath:config.properties")
-
+//@PropertySource("classpath:config.properties")
+@ConfigurationProperties
 public class ConfigUtils {
 	
-	@Autowired
-	private Environment env;
-	@Value("${esHost}")
+	
 	private  String esHost;
-	@Value("${esCluster}")
+	
 	private  String esCluster;
-	@Value("${esGlobalUser}")
+	
 	private  String esGlobalUser;
-	@Value("${esGlobalUserPass}")
+	
 	private  String esGlobalUserPass;
-	@Value("${esPort}")
+
 	private  int esPort;
 	
-	@Value("${server.port}")
-	private int sport;
 	
 	
-	public ConfigUtils()
-	{
+	public static TransportClient client;
+	
+	@Bean
+    public Client client() throws Exception {
+
+		Settings settings = Settings.builder().put("cluster.name", esCluster)
+		.put("xpack.security.user", esGlobalUser+":"+esGlobalUserPass)
+		.put("client.transport.ping_timeout", 7200, TimeUnit.SECONDS).build();
+		try {
+			client = new PreBuiltXPackTransportClient(settings)
+					.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(esHost), esPort));
+				
 		
+			
 		
-	}
+		} catch (UnknownHostException e) {
+			// logger.info("{}",e.getMessage());
+		}
+		return null;
+    }
 
-
-	
-	public Environment getEnv() {
-		return env;
-	}
-
-	public void setEnv(Environment env) {
-		this.env = env;
-	}
+   
 
 	public String getEsHost() {
-		System.out.println("///////"+esHost);
-		return env.getProperty("esHost");
+		return esHost;
 	}
 
 	public void setEsHost(String esHost) {
@@ -91,18 +114,7 @@ public class ConfigUtils {
 	public void setEsPort(int esPort) {
 		this.esPort = esPort;
 	}
-
-	public int getSport() {
-		return sport;
-	}
-
-	public void setSport(int sport) {
-		this.sport = sport;
-	}
-
-	
-
 	
 	
-	
+
 }

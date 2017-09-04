@@ -38,6 +38,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharmila.musiclibrary.api.domain.Music;
 import com.sharmila.musiclibrary.esclient.ElasticSearch5xClient;
+import com.sharmila.musiclibrary.utils.ConfigUtils;
 
 
 @Component
@@ -46,7 +47,7 @@ public class MusicRepository {
 	//private static final Logger logger = LoggerFactory.getLogger(MusicRepository.class);
 
 	
-	private static Client client = ElasticSearch5xClient.CLIENT.getInstance();
+	private static Client client = ConfigUtils.client;
 	
 	public static Map<String, Object> sourceMap = new HashMap<String, Object>();
 

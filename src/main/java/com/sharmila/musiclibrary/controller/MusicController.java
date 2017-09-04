@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sharmila.musiclibrary.api.MusicManager;
 import com.sharmila.musiclibrary.api.domain.Music;
+import com.sharmila.musiclibrary.utils.ConfigUtils;
 
 
 @RestController
@@ -28,7 +29,12 @@ public class MusicController {
 	@Autowired
 	private MusicManager musicManager;
 	
+	private ConfigUtils configUtils;
 	
+	@Autowired
+	public void setConfigUtils(ConfigUtils configUtils) {
+		this.configUtils = configUtils;
+	}
 	private  List<Map<String,Object>> response=new ArrayList<>();
 	@RequestMapping(method=RequestMethod.GET)
 	public List<Map<String,Object>> search(
@@ -37,6 +43,7 @@ public class MusicController {
 			@RequestParam(value="size",required=false)Integer size,
 			@RequestParam(value="page",required=false)Integer page,
 			@RequestParam(value="role",required=false)String role){
+		System.out.println("++++"+ configUtils.getEsCluster());
 		Integer from=1;
 		System.out.println("recieved size "+size);
 		if(sortBy==null){

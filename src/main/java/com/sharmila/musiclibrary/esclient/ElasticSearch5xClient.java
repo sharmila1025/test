@@ -7,12 +7,14 @@ import java.util.concurrent.TimeUnit;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 
 
 import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
@@ -21,22 +23,22 @@ import com.sharmila.musiclibrary.utils.ConfigUtils;
 
 
 
-@Component
-//@PropertySource("classpath:config.properties")
 
-public enum ElasticSearch5xClient {
 
-	CLIENT;
+public class ElasticSearch5xClient {
+
+
 	// final Logger logger = LogManager.getLogger(Logger.class.getName());
 	private TransportClient client;
 
-	@Autowired
-	private ConfigUtils configUtils;
 	
+
+	
+
 	private ElasticSearch5xClient() {
+		
 		// logger.info("Creating new elasticsearch 5.X client object...");
-	//	String esHost1 = configUtils.getEsHost();
-	//	System.out.println(esHost1);
+	
 //		String esCluster = ConfigUtils.getProperty("esCluster");
 //		String esGlobalUser=ConfigUtils.getProperty("esGlobalUser");
 //		String esGlobalUserPassword=ConfigUtils.getProperty("esGlobalUserPass");
@@ -63,6 +65,7 @@ public enum ElasticSearch5xClient {
 	}
 
 	public Client getInstance() {
+		//System.out.println("-testing--"+configUtils.getEsCluster());
 		return this.client;
 	}
 
