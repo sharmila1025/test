@@ -4,13 +4,11 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
 import java.util.ArrayList;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.xml.bind.annotation.XmlElement;
-
-
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -22,39 +20,39 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
-
 import org.elasticsearch.common.unit.TimeValue;
-
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
-
 import org.elasticsearch.search.sort.SortOrder;
-
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharmila.musiclibrary.api.domain.Music;
+import com.sharmila.musiclibrary.controller.MusicController;
 import com.sharmila.musiclibrary.esclient.ElasticSearch5xClient;
-import com.sharmila.musiclibrary.utils.ConfigUtils;
+
 
 
 @Component
 public class MusicRepository {
 
-	//private static final Logger logger = LoggerFactory.getLogger(MusicRepository.class);
-
 	
-	private static Client client = ConfigUtils.client;
+	 
+	@Autowired
+	private MusicController musicController;
+	
+	private  Client client ;
 	
 	public static Map<String, Object> sourceMap = new HashMap<String, Object>();
 
-	
+	public static final String indexName = "company";
+	public static final String typeName = "music";
 
 	
 	public RestStatus create(Music music) {
+		client=musicController.getClient();
 		ObjectMapper mapper = new ObjectMapper(); // create once, reuse
 		RestStatus s=null;
 		// generate json
@@ -62,7 +60,7 @@ public class MusicRepository {
 			byte[] json = mapper.writeValueAsBytes(music);
 			System.out.println(json);
 			
-			IndexResponse indexResponse=	client.prepareIndex("musiclibrary", "music").setSource(json).execute().actionGet();
+			IndexResponse indexResponse=	client.prepareIndex(indexName, typeName).setSource(json).execute().actionGet();
 			 s = indexResponse.status();
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
@@ -72,21 +70,22 @@ public class MusicRepository {
 	}
 
 	public RestStatus delete(String id) {
+		client=musicController.getClient();
 		System.out.println("----" + id);
 		
-		DeleteResponse response = client.prepareDelete("musiclibrary", "music", id).execute().actionGet();
+		DeleteResponse response = client.prepareDelete(indexName, typeName, id).execute().actionGet();
 		
 		return response.status();
 	}
 
 	public RestStatus update(Music music,String id) throws IOException {
-
+		client=musicController.getClient();
 		ObjectMapper mapper = new ObjectMapper();
 		RestStatus res=null;
 		try {
 			byte[] json = mapper.writeValueAsBytes(music);
 		
-			IndexRequest indexRequest = new IndexRequest("musiclibrary",  "music", id)
+			IndexRequest indexRequest = new IndexRequest(indexName,  typeName, id)
 			        .source(jsonBuilder()
 			            .startObject()
 			            .field("singer", music.getSinger())
@@ -94,7 +93,7 @@ public class MusicRepository {
 						.field("title", music.getTitle())
 						.field("modifiedDate",music.getModifiedDate())
 			            .endObject());
-			UpdateRequest updateRequest = new UpdateRequest("musiclibrary",  "music", id)
+			UpdateRequest updateRequest = new UpdateRequest(indexName, typeName, id)
 			        .doc(jsonBuilder()
 			            .startObject()
 			            .field("singer", music.getSinger())
@@ -125,9 +124,9 @@ public class MusicRepository {
 	}
 
 	public GetResponse   getById(String id) {
-
+		client=musicController.getClient();
 		
-		GetResponse response = client.prepareGet("musiclibrary", "music", id).execute()
+		GetResponse response = client.prepareGet(indexName, typeName, id).execute()
 				.actionGet();
 		
 		
@@ -152,7 +151,10 @@ public class MusicRepository {
 		System.out.println("Repository---->> sort by "+sortBy +" sort order "+sortOrder + " size "+size +" from "+from );
 		
 
-			response = client.prepareSearch("musiclibrary").setTypes("music")
+		
+		client=musicController.getClient();
+		System.out.println(" client is " +client);
+			response = client.prepareSearch("company").setTypes("music")
 					.addSort(sortBy,srtOrder)	
 					.setSize(size)
 					.setFrom(from)
@@ -180,7 +182,7 @@ public class MusicRepository {
 	@JsonProperty("parameters")
 	@XmlElement(required = true)
 	public void bulkTest(List<Music> music) {
-	
+		client=musicController.getClient();
 		ObjectMapper mapper = new ObjectMapper();
 
 		try {
@@ -210,7 +212,7 @@ public class MusicRepository {
 					
 					.build();
 
-			bulkProcessor.add(new IndexRequest("musiclibrary", "music").source(json));
+			bulkProcessor.add(new IndexRequest(indexName, typeName).source(json));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
