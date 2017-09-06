@@ -66,8 +66,55 @@ public class MusicController {
 			@RequestParam(value="page",required=false)String page,
 			@RequestParam(value="role",required=true)String role) throws Exception {
 		
-		if(role.equalsIgnoreCase("usteam")){
+
+		sendAuthReq(role);
+	
+		response = musicManager.searchAll(sortBy, sortOrder, size, page);
 		
+
+		return response;
+	}
+	
+	
+	
+	@RequestMapping(method=RequestMethod.POST)
+	public RestStatus createIndex(@RequestBody Music music,@RequestParam(value="role",required=true)String role) throws Exception{
+		
+		sendAuthReq(role);
+		RestStatus response=musicManager.create(music);
+		return response;
+	}
+	
+
+	@RequestMapping(value="/{id}",method=RequestMethod.PUT)
+	public RestStatus update(@RequestBody Music music,@PathVariable(value="id")String id,@RequestParam(value="role",required=true)String role)throws Exception{
+		System.out.println("request has arrived");
+		sendAuthReq(role);
+		RestStatus response=musicManager.update(music, id);
+		return response;
+	}
+	
+	
+	@RequestMapping(value="/{id}",method=RequestMethod.GET)
+	public GetResponse  getById(@PathVariable(value="id")String id,@RequestParam(value="role",required=true)String role)throws Exception{
+	
+		GetResponse	 response=musicManager.getById(id);
+		System.out.println(response);
+		return response;
+	}
+	
+	@RequestMapping(value="/{id}",method=RequestMethod.DELETE)
+	public RestStatus deleteIndexItems(@PathVariable(value="id")String id,@RequestParam(value="role",required=true)String role)throws Exception{
+		System.out.println("delete api called : id"+id);
+		RestStatus response=musicManager.delete(id);
+		
+		return response;
+	}
+	
+	
+	public void sendAuthReq(String role) throws Exception{
+		if(role.equalsIgnoreCase("usteam")){
+			
 			String  username=configUtils.getUserUs();
 			String password=configUtils.getUserUsPass();
 			
@@ -80,8 +127,11 @@ public class MusicController {
 		}
 		else if(role.equalsIgnoreCase("nepalteam")){
 			
-			String  username=configUtils.getUserUs();
-			String password=configUtils.getUserUsPass();
+			String  username=configUtils.getUserNepal();
+			String password=configUtils.getUserNepalPass();
+			
+			System.out.println(" user name "+username);
+			System.out.println(" password  "+password);
 			elasticSearch5xClient.getClient(username, password);
 		}
 		else{
@@ -89,50 +139,6 @@ public class MusicController {
 			elasticSearch5xClient.getClient("aa", "bb");
 			System.out.println(" the role is "+role);
 		}
-		
-		
-		
-		
-		//System.out.println("sort by "+sortBy +" sort order "+sortOrder + " size "+size +" from "+from );
-		response = musicManager.searchAll(sortBy, sortOrder, size, page);
-		
-
-		return response;
 	}
-	
-	
-	
-	@RequestMapping(method=RequestMethod.POST)
-	public RestStatus createIndex(@RequestBody Music music){
-		
-		RestStatus response=musicManager.create(music);
-		return response;
-	}
-	
-	@RequestMapping(method=RequestMethod.PUT)
-	public RestStatus update(@RequestBody Music music){
-		
-		RestStatus response=musicManager.create(music);
-		return response;
-	}
-	
-	
-	@RequestMapping(value="/{id}",method=RequestMethod.GET)
-	public GetResponse  getById(@PathVariable(value="id")String id){
-	
-		GetResponse	 response=musicManager.getById(id);
-		System.out.println(response);
-		return response;
-	}
-	
-	@RequestMapping(value="/{id}",method=RequestMethod.DELETE)
-	public RestStatus deleteIndexItems(@PathVariable(value="id")String id){
-		System.out.println("delete api called : id"+id);
-		RestStatus response=musicManager.delete(id);
-		
-		return response;
-	}
-	
-	
 	
 }

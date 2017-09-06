@@ -63,7 +63,7 @@ public class MusicRepository {
 
 
 	public RestStatus create(Music music) {
-		
+		client=elasticSearch5xClient.client;
 		ObjectMapper mapper = new ObjectMapper(); // create once, reuse
 		RestStatus restStatus=null;
 		// generate json
@@ -81,7 +81,7 @@ public class MusicRepository {
 	}
 
 	public RestStatus delete(String id) {
-		
+		client=elasticSearch5xClient.client;
 		System.out.println("----" + id);
 		
 		DeleteResponse response = client.prepareDelete(indexName, typeName, id).execute().actionGet();
@@ -92,7 +92,7 @@ public class MusicRepository {
 	
 
 	public RestStatus update(Music music,String id) throws IOException {
-		
+		client=elasticSearch5xClient.client;
 		ObjectMapper mapper = new ObjectMapper();
 		RestStatus res=null;
 		try {
@@ -138,7 +138,7 @@ public class MusicRepository {
 
 	public GetResponse   getById(String id) {
 		
-		
+		client=elasticSearch5xClient.client;
 		GetResponse response = client.prepareGet(indexName, typeName, id).execute()
 				.actionGet();
 		
@@ -156,10 +156,11 @@ public class MusicRepository {
 		SortOrder srtOrder = SortOrder.DESC;;
 		int dataSize;
 		int frontPage;
-		Integer from=1;
+		
+		Integer from=0;
 		
 		if(size==null){
-			dataSize=0;
+			dataSize=10;
 		}
 		else{
 			dataSize=Integer.parseInt(size);
@@ -204,7 +205,7 @@ public class MusicRepository {
 			}
 		}
 		
-		
+		//if sorting on fields which is not date type then we need to use fieldname.keyword because field type is by default text
 		
 		
 		System.out.println("Repository---->> sort by "+sortBy +" sort order "+sortOrder + " size "+size +" from "+from );
@@ -241,7 +242,7 @@ public class MusicRepository {
 	@JsonProperty("parameters")
 	@XmlElement(required = true)
 	public void bulkTest(List<Music> music) {
-		
+		client=elasticSearch5xClient.client;
 		ObjectMapper mapper = new ObjectMapper();
 
 		try {
