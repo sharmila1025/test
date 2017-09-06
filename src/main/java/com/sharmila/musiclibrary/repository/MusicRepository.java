@@ -1,13 +1,16 @@
 package com.sharmila.musiclibrary.repository;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import static org.elasticsearch.xpack.security.authc.support.UsernamePasswordToken.basicAuthHeaderValue;
 
 import java.io.IOException;
 import java.util.ArrayList;
-
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.PostConstruct;
 import javax.xml.bind.annotation.XmlElement;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -24,6 +27,7 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.sort.SortOrder;
+import org.elasticsearch.xpack.security.authc.support.SecuredString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -41,18 +45,28 @@ public class MusicRepository {
 	
 	 
 	@Autowired
-	private MusicController musicController;
+	private ElasticSearch5xClient elasticSearch5xClient;
 	
-	private  Client client ;
-	
+	private static Client client ;
 	public static Map<String, Object> sourceMap = new HashMap<String, Object>();
 
 	public static final String indexName = "company";
 	public static final String typeName = "music";
+	
 
+ 	
+	
+	public Client getClient(String username,String password)
+	{
+		client=elasticSearch5xClient.getClient();
+		String token = basicAuthHeaderValue(username, new SecuredString(password.toCharArray()));
+		client=client.filterWithHeader(Collections.singletonMap("Authorization", token));
+		
+		return client;
+	}
 	
 	public RestStatus create(Music music) {
-		client=musicController.getClient();
+		
 		ObjectMapper mapper = new ObjectMapper(); // create once, reuse
 		RestStatus s=null;
 		// generate json
@@ -70,7 +84,7 @@ public class MusicRepository {
 	}
 
 	public RestStatus delete(String id) {
-		client=musicController.getClient();
+		
 		System.out.println("----" + id);
 		
 		DeleteResponse response = client.prepareDelete(indexName, typeName, id).execute().actionGet();
@@ -79,7 +93,7 @@ public class MusicRepository {
 	}
 
 	public RestStatus update(Music music,String id) throws IOException {
-		client=musicController.getClient();
+		
 		ObjectMapper mapper = new ObjectMapper();
 		RestStatus res=null;
 		try {
@@ -124,7 +138,7 @@ public class MusicRepository {
 	}
 
 	public GetResponse   getById(String id) {
-		client=musicController.getClient();
+		
 		
 		GetResponse response = client.prepareGet(indexName, typeName, id).execute()
 				.actionGet();
@@ -152,7 +166,7 @@ public class MusicRepository {
 		
 
 		
-		client=musicController.getClient();
+		
 		System.out.println(" client is " +client);
 			response = client.prepareSearch("company").setTypes("music")
 					.addSort(sortBy,srtOrder)	
@@ -182,7 +196,7 @@ public class MusicRepository {
 	@JsonProperty("parameters")
 	@XmlElement(required = true)
 	public void bulkTest(List<Music> music) {
-		client=musicController.getClient();
+		
 		ObjectMapper mapper = new ObjectMapper();
 
 		try {

@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.sharmila.musiclibrary.api.MusicManager;
 import com.sharmila.musiclibrary.api.domain.Music;
 import com.sharmila.musiclibrary.esclient.ElasticSearch5xClient;
+import com.sharmila.musiclibrary.repository.MusicRepository;
 import com.sharmila.musiclibrary.utils.ConfigUtils;
 import static org.elasticsearch.xpack.security.authc.support.UsernamePasswordToken.basicAuthHeaderValue;
 
@@ -38,9 +39,12 @@ public class MusicController {
 	private ConfigUtils configUtils;
 	
 	@Autowired
-	private ElasticSearch5xClient elasticSearch5xClient;
+	private MusicRepository musicRepository;
 	
-	private  Client client ;
+
+	
+	
+	
 	
 	
 	@Autowired
@@ -66,7 +70,9 @@ public class MusicController {
 			
 			System.out.println(" user name "+username);
 			System.out.println(" password  "+password);
-			client=getAuthToken(username, password);
+			musicRepository.getClient(username, password);
+			
+			
 			
 		}
 		else if(role.equalsIgnoreCase("nepalteam")){
@@ -74,14 +80,15 @@ public class MusicController {
 			String  username=configUtils.getUserUs();
 			String password=configUtils.getUserUsPass();
 			
-			client=getAuthToken(username, password);
-			
+			musicRepository.getClient(username, password);
 		}
 		else{
 			response=null;
-			client=null;
+			musicRepository.getClient("aa", "bb");
+			System.out.println(" the role is "+role);
 		}
-	
+		
+		
 		Integer from=1;
 		System.out.println("recieved size "+size);
 		if(sortBy==null){
@@ -104,6 +111,7 @@ public class MusicController {
 		
 		System.out.println("sort by "+sortBy +" sort order "+sortOrder + " size "+size +" from "+from );
 		response = musicManager.searchAll(sortBy, sortOrder, size, from);
+		
 
 		return response;
 	}
@@ -141,25 +149,6 @@ public class MusicController {
 		return response;
 	}
 	
-	public Client getAuthToken(String username,String password)
-	{
-		client=elasticSearch5xClient.getClient();
-		String token = basicAuthHeaderValue(username, new SecuredString(password.toCharArray()));
-		client=client.filterWithHeader(Collections.singletonMap("Authorization", token));
-		return client;
-		
-	}
-
-
-
-	public Client getClient() {
-		return client;
-	}
-
-
-
-	public void setClient(Client client) {
-		this.client = client;
-	}
+	
 	
 }
