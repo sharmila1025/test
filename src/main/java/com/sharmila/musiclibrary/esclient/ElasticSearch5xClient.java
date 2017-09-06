@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 
+import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -37,8 +38,10 @@ public class ElasticSearch5xClient {
 	private  int esPort;
 	
 	
-	public  TransportClient client;
-
+	public   TransportClient transportClient;
+	
+	public static  Client  client;
+	
 	@SuppressWarnings("resource")
 	@PostConstruct
 	public void init() throws Exception {
@@ -50,30 +53,30 @@ public class ElasticSearch5xClient {
 		.put("xpack.security.user", esGlobalUser+":"+esGlobalUserPass)
 		.put("client.transport.ping_timeout", 7200, TimeUnit.SECONDS).build();
 		try {
-			client = new PreBuiltXPackTransportClient(settings)
+			transportClient = new PreBuiltXPackTransportClient(settings)
 					.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(esHost), esPort));
 				
 		
-			String token = basicAuthHeaderValue(esGlobalUser, new SecuredString(esGlobalUserPass.toCharArray()));
-			client.filterWithHeader(Collections.singletonMap("Authorization", token));
-		
-			System.out.println(" the client in the init method "+client);
+			System.out.println(" the client in the init method "+transportClient);
 			
 		} catch (UnknownHostException e) {
 			System.out.println(" error in  "+e);
 		}
 	
+	
     }
 	
-	
-	public TransportClient getClient() {
+	public Client getClient(String username,String password) throws Exception
+	{
+		client=transportClient;
+		System.out.println("before auth "+transportClient);
+		String token = basicAuthHeaderValue(username, new SecuredString(password.toCharArray()));
+		
+		client=transportClient.filterWithHeader(Collections.singletonMap("Authorization", token));
+		System.out.println(" after auth "+client);
 		return client;
 	}
-
-	public void setClient(TransportClient client) {
-		this.client = client;
-	}
-
+	
 
 	public String getEsHost() {
 		return esHost;
@@ -122,6 +125,22 @@ public class ElasticSearch5xClient {
 
 	public void setEsPort(int esPort) {
 		this.esPort = esPort;
+	}
+
+	public TransportClient getTransportClient() {
+		return transportClient;
+	}
+
+	public void setTransportClient(TransportClient transportClient) {
+		this.transportClient = transportClient;
+	}
+
+	public static Client getClient() {
+		return client;
+	}
+
+	public static void setClient(Client client) {
+		ElasticSearch5xClient.client = client;
 	}
 
 	

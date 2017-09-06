@@ -17,6 +17,6 @@ public interface MusicManager {
 	RestStatus update(Music music,String id) throws IOException;
 	GetResponse	  getById(String id);
 	void bulkTest(List<Music> music);
-	List<Map<String,Object>>  searchAll(String sortBy,String sortOrder,int size,int from);
+	List<Map<String,Object>>  searchAll(String sortBy,String sortOrder,String size,String from);
 	
 }

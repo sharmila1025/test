@@ -47,40 +47,37 @@ public class MusicRepository {
 	@Autowired
 	private ElasticSearch5xClient elasticSearch5xClient;
 	
-	private static Client client ;
+	private  Client client;
 	public static Map<String, Object> sourceMap = new HashMap<String, Object>();
 
 	public static final String indexName = "company";
 	public static final String typeName = "music";
 	
 
- 	
 	
-	public Client getClient(String username,String password)
-	{
-		client=elasticSearch5xClient.getClient();
-		String token = basicAuthHeaderValue(username, new SecuredString(password.toCharArray()));
-		client=client.filterWithHeader(Collections.singletonMap("Authorization", token));
-		
-		return client;
+	
+	@Autowired
+	public void setElasticSearch5xClient(ElasticSearch5xClient elasticSearch5xClient) {
+		this.elasticSearch5xClient = elasticSearch5xClient;
 	}
-	
+
+
 	public RestStatus create(Music music) {
 		
 		ObjectMapper mapper = new ObjectMapper(); // create once, reuse
-		RestStatus s=null;
+		RestStatus restStatus=null;
 		// generate json
 		try {
 			byte[] json = mapper.writeValueAsBytes(music);
 			System.out.println(json);
 			
 			IndexResponse indexResponse=	client.prepareIndex(indexName, typeName).setSource(json).execute().actionGet();
-			 s = indexResponse.status();
+			restStatus = indexResponse.status();
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return s;
+		return restStatus;
 	}
 
 	public RestStatus delete(String id) {
@@ -91,6 +88,8 @@ public class MusicRepository {
 		
 		return response.status();
 	}
+
+	
 
 	public RestStatus update(Music music,String id) throws IOException {
 		
@@ -150,17 +149,63 @@ public class MusicRepository {
 
 	
 
-	public List<Map<String, Object>> searchAll(String sortBy,String sortOrder,int size,int from) {
-		
-		SearchResponse response=null;
-		SortOrder srtOrder;
-		if(sortOrder.equalsIgnoreCase("ASC")){
-			srtOrder = SortOrder.ASC;
-		}
+	public List<Map<String, Object>> searchAll(String sortBy,String sortOrder,String size,String page) {
 	
+		client=elasticSearch5xClient.client;
+		SearchResponse response=null;
+		SortOrder srtOrder = SortOrder.DESC;;
+		int dataSize;
+		int frontPage;
+		Integer from=1;
+		
+		if(size==null){
+			dataSize=0;
+		}
 		else{
+			dataSize=Integer.parseInt(size);
+		}
+		 
+		
+		
+		if(page==null){
+			frontPage=0;
+		}
+		else{
+			frontPage=Integer.parseInt(page);
+		}
+		
+		if(dataSize==0&& frontPage==0){
+			dataSize=10;
+			from=0;
+		}
+		if(frontPage>0){
+			from=(frontPage-1)*dataSize;
+		}
+		else{
+			from=0;
+		}
+		
+		
+		
+		if(sortBy==null){
+			sortBy="modifiedDate";
+		}
+		
+		if(sortOrder==null){
 			srtOrder=SortOrder.DESC;
 		}
+		else{
+			if(sortOrder.equalsIgnoreCase("ASC")){
+				srtOrder = SortOrder.ASC;
+			}
+		
+			else{
+				srtOrder=SortOrder.DESC;
+			}
+		}
+		
+		
+		
 		
 		System.out.println("Repository---->> sort by "+sortBy +" sort order "+sortOrder + " size "+size +" from "+from );
 		
@@ -170,7 +215,7 @@ public class MusicRepository {
 		System.out.println(" client is " +client);
 			response = client.prepareSearch("company").setTypes("music")
 					.addSort(sortBy,srtOrder)	
-					.setSize(size)
+					.setSize(dataSize)
 					.setFrom(from)
 					.execute().actionGet();
 	

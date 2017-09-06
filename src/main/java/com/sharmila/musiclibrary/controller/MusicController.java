@@ -44,7 +44,10 @@ public class MusicController {
 
 	
 	
+	@Autowired
+	private ElasticSearch5xClient elasticSearch5xClient;
 	
+	private  Client client ;
 	
 	
 	@Autowired
@@ -59,9 +62,9 @@ public class MusicController {
 	public List<Map<String,Object>> search(
 			@RequestParam(value="sortBy",required=false)String sortBy,
 			@RequestParam(value="sortOrder",required=false)String sortOrder,
-			@RequestParam(value="size",required=false)Integer size,
-			@RequestParam(value="page",required=false)Integer page,
-			@RequestParam(value="role",required=true)String role){
+			@RequestParam(value="size",required=false)String size,
+			@RequestParam(value="page",required=false)String page,
+			@RequestParam(value="role",required=true)String role) throws Exception {
 		
 		if(role.equalsIgnoreCase("usteam")){
 		
@@ -70,7 +73,7 @@ public class MusicController {
 			
 			System.out.println(" user name "+username);
 			System.out.println(" password  "+password);
-			musicRepository.getClient(username, password);
+			elasticSearch5xClient.getClient(username, password);
 			
 			
 			
@@ -79,38 +82,19 @@ public class MusicController {
 			
 			String  username=configUtils.getUserUs();
 			String password=configUtils.getUserUsPass();
-			
-			musicRepository.getClient(username, password);
+			elasticSearch5xClient.getClient(username, password);
 		}
 		else{
 			response=null;
-			musicRepository.getClient("aa", "bb");
+			elasticSearch5xClient.getClient("aa", "bb");
 			System.out.println(" the role is "+role);
 		}
 		
 		
-		Integer from=1;
-		System.out.println("recieved size "+size);
-		if(sortBy==null){
-			sortBy="modifiedDate";
-		}
-		if(sortOrder==null){
-			sortOrder="DESC";
-		}
 		
-		if(size==null && page==null){
-			size=10;
-			from=0;
-		}
-		if(page!=null){
-			from=(page-1)*size;
-		}
-		else{
-			from=0;
-		}
 		
-		System.out.println("sort by "+sortBy +" sort order "+sortOrder + " size "+size +" from "+from );
-		response = musicManager.searchAll(sortBy, sortOrder, size, from);
+		//System.out.println("sort by "+sortBy +" sort order "+sortOrder + " size "+size +" from "+from );
+		response = musicManager.searchAll(sortBy, sortOrder, size, page);
 		
 
 		return response;

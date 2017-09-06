@@ -67,7 +67,7 @@ public class MusicManagerImpl implements MusicManager{
 	
 
 	@Override
-	public List<Map<String,Object>>   searchAll(String sortBy,String sortOrder,int size,int from) {
+	public List<Map<String,Object>>   searchAll(String sortBy,String sortOrder,String size,String from) {
 		
 		return musicRepository.searchAll(sortBy, sortOrder, size, from);
 	}
