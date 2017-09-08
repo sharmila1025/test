@@ -15,9 +15,12 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
 import org.elasticsearch.xpack.security.authc.support.SecuredString;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
+
+import com.sharmila.musiclibrary.utils.ConfigUtils;
 
 
 
@@ -40,11 +43,18 @@ public class ElasticSearch5xClient {
 	
 	public   TransportClient transportClient;
 	
-	public static  Client  client;
+	private ConfigUtils configUtils;
+	
+	@Autowired
+	public void setConfigUtils(ConfigUtils configUtils) {
+		this.configUtils = configUtils;
+	}
+	
+	private   Client  client;
 	
 	@SuppressWarnings("resource")
 	@PostConstruct
-	public void init() throws Exception {
+	public void init() {
 
     	
     	System.out.println( " the "+esCluster);
@@ -58,6 +68,7 @@ public class ElasticSearch5xClient {
 				
 		
 			System.out.println(" the client in the init method "+transportClient);
+			System.out.println("Check the token if it has changed "+settings.getAsStructuredMap());
 			
 		} catch (UnknownHostException e) {
 			System.out.println(" error in  "+e);
@@ -66,17 +77,48 @@ public class ElasticSearch5xClient {
 	
     }
 	
-	public Client getClient(String username,String password) throws Exception
+	public Client checkAuth(String username,String password) 
 	{
 		client=transportClient;
 		System.out.println("before auth "+transportClient);
 		String token = basicAuthHeaderValue(username, new SecuredString(password.toCharArray()));
 		
-		client=transportClient.filterWithHeader(Collections.singletonMap("Authorization", token));
+		client=client.filterWithHeader(Collections.singletonMap("Authorization", token));
 		System.out.println(" after auth "+client);
+		System.out.println("settings "+client.settings().getAsStructuredMap());
 		return client;
 	}
 	
+	
+	
+	public void sendAuthReq(String role) {
+		if(role.equalsIgnoreCase("usteam")){
+			
+			String  username=configUtils.getUserUs();
+			String password=configUtils.getUserUsPass();
+			
+			System.out.println(" user name "+username);
+			System.out.println(" password  "+password);
+			checkAuth(username, password);
+			
+			
+			
+		}
+		else if(role.equalsIgnoreCase("nepalteam")){
+			
+			String  username=configUtils.getUserNepal();
+			String password=configUtils.getUserNepalPass();
+			
+			System.out.println(" user name "+username);
+			System.out.println(" password  "+password);
+			checkAuth(username, password);
+		}
+		else{
+			
+			checkAuth("aa", "bb");
+			System.out.println(" the role is "+role);
+		}
+	}
 
 	public String getEsHost() {
 		return esHost;
@@ -135,13 +177,19 @@ public class ElasticSearch5xClient {
 		this.transportClient = transportClient;
 	}
 
-	public static Client getClient() {
+	public Client getClient() {
 		return client;
 	}
 
-	public static void setClient(Client client) {
-		ElasticSearch5xClient.client = client;
+	public void setClient(Client client) {
+		this.client = client;
 	}
+
+	public ConfigUtils getConfigUtils() {
+		return configUtils;
+	}
+
+
 
 	
 }

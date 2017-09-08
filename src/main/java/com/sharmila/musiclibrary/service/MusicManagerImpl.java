@@ -4,8 +4,12 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
+import org.elasticsearch.action.DocWriteResponse.Result;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.rest.RestStatus;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,11 +46,12 @@ public class MusicManagerImpl implements MusicManager{
 	}
 
 	@Override
-	public RestStatus update(Music music,String id) throws IOException {
+	public RestStatus update(Music music,String id) throws InterruptedException, ExecutionException, IOException {
 		
 
 			music.setModifiedDate(new Date().getTime());
 			return musicRepository.update(music,id);
+			
 	
 	}
 
@@ -58,13 +63,14 @@ public class MusicManagerImpl implements MusicManager{
 
 	
 
-	@Override
-	public void bulkTest(List<Music> music) {
-		
-		 musicRepository.bulkTest(music);
-	}
+	
 
 	
+
+	@Override
+	public BulkResponse bulkOperation(Object obj) {
+		return null;
+	}
 
 	@Override
 	public List<Map<String,Object>>   searchAll(String sortBy,String sortOrder,String size,String from) {

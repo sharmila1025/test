@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.xpack.security.authc.support.SecuredString;
@@ -36,7 +38,7 @@ public class MusicController {
 	@Autowired
 	private MusicManager musicManager;
 	
-	private ConfigUtils configUtils;
+	
 	
 	@Autowired
 	private MusicRepository musicRepository;
@@ -50,10 +52,6 @@ public class MusicController {
 	private  Client client ;
 	
 	
-	@Autowired
-	public void setConfigUtils(ConfigUtils configUtils) {
-		this.configUtils = configUtils;
-	}
 
 
 
@@ -67,8 +65,8 @@ public class MusicController {
 			@RequestParam(value="role",required=true)String role) throws Exception {
 		
 
-		sendAuthReq(role);
-	
+		
+		elasticSearch5xClient.sendAuthReq(role);
 		response = musicManager.searchAll(sortBy, sortOrder, size, page);
 		
 
@@ -79,25 +77,25 @@ public class MusicController {
 	
 	@RequestMapping(method=RequestMethod.POST)
 	public RestStatus createIndex(@RequestBody Music music,@RequestParam(value="role",required=true)String role) throws Exception{
+		elasticSearch5xClient.sendAuthReq(role);
 		
-		sendAuthReq(role);
 		RestStatus response=musicManager.create(music);
 		return response;
 	}
 	
 
 	@RequestMapping(value="/{id}",method=RequestMethod.PUT)
-	public RestStatus update(@RequestBody Music music,@PathVariable(value="id")String id,@RequestParam(value="role",required=true)String role)throws Exception{
-		System.out.println("request has arrived");
-		sendAuthReq(role);
-		RestStatus response=musicManager.update(music, id);
-		return response;
+	public RestStatus update(@RequestBody Music music,@RequestParam(value="role",required=true)String role,@PathVariable(value="id")String id)throws Exception{
+		
+		elasticSearch5xClient.sendAuthReq(role);
+		return musicManager.update(music, id); 
+		
 	}
 	
 	
 	@RequestMapping(value="/{id}",method=RequestMethod.GET)
 	public GetResponse  getById(@PathVariable(value="id")String id,@RequestParam(value="role",required=true)String role)throws Exception{
-	
+		elasticSearch5xClient.sendAuthReq(role);
 		GetResponse	 response=musicManager.getById(id);
 		System.out.println(response);
 		return response;
@@ -105,6 +103,7 @@ public class MusicController {
 	
 	@RequestMapping(value="/{id}",method=RequestMethod.DELETE)
 	public RestStatus deleteIndexItems(@PathVariable(value="id")String id,@RequestParam(value="role",required=true)String role)throws Exception{
+		elasticSearch5xClient.sendAuthReq(role);
 		System.out.println("delete api called : id"+id);
 		RestStatus response=musicManager.delete(id);
 		
@@ -112,33 +111,6 @@ public class MusicController {
 	}
 	
 	
-	public void sendAuthReq(String role) throws Exception{
-		if(role.equalsIgnoreCase("usteam")){
-			
-			String  username=configUtils.getUserUs();
-			String password=configUtils.getUserUsPass();
-			
-			System.out.println(" user name "+username);
-			System.out.println(" password  "+password);
-			elasticSearch5xClient.getClient(username, password);
-			
-			
-			
-		}
-		else if(role.equalsIgnoreCase("nepalteam")){
-			
-			String  username=configUtils.getUserNepal();
-			String password=configUtils.getUserNepalPass();
-			
-			System.out.println(" user name "+username);
-			System.out.println(" password  "+password);
-			elasticSearch5xClient.getClient(username, password);
-		}
-		else{
-			response=null;
-			elasticSearch5xClient.getClient("aa", "bb");
-			System.out.println(" the role is "+role);
-		}
-	}
+	
 	
 }
